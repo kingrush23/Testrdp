@@ -1,0 +1,36 @@
+name: RDP on GitHub Actions
+
+on:
+  workflow_dispatch:
+  # Opsi: Jika Anda ingin workflow berjalan setiap kali ada push
+  # push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360 # 6 jam
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+          oauth-client-secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
+          # Atau menggunakan Auth Key
+          # tailscale-authkey: ${{ secrets.TAILSCALE_AUTH_KEY }}
+          
+      - name: Install Desktop Environment and XRDP
+        run: |
+          sudo apt update
+          sudo apt install -y xrdp tightvncserver
+          sudo systemctl enable xrdp
+          sudo systemctl start xrdp
+          
+      - name: Keep Alive
+        run: |
+          echo "RDP is ready. The session will stay active for up to 6 hours."
+          echo "You can find the Tailscale IP of this runner on your Tailscale dashboard."
+          sleep 21600 # Menjaga sesi tetap hidup selama 6 jam (360 menit * 60 detik)
